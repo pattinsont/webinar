@@ -1,18 +1,20 @@
-import cli
+import argparse
+from iosxr.xrcli.xrcli_helper import XrcliHelper
+from cisco.script_mgmt import xrlog
 
-# Function to execute the command and process the output
-def show_alias_output(alias):
-    # Build the command
-    command = f"show run | include {alias}"
+def run_custom_show_command(alias):
+    helper = XrcliHelper(debug=True)
+    cmd = f"show run | include {alias}"
+    result = helper.xrcli_exec(cmd)
     
-    # Execute the command
-    output = cli.execute(command)
-    
-    # Replace semicolons with newlines
-    processed_output = output.replace(';', '\n')
-    
-    # Print the processed output
-    print(processed_output)
+    if result['status'] == 'success':
+        print(result['output'].replace(';', '\n'))
+        xrlog.getSysLogger('custom_show_command').info('SCRIPT : Custom show command successful')
+    else:
+        xrlog.getSysLogger('custom_show_command').error('SCRIPT : Custom show command failed')
 
-# Replace 'your_alias_here' with your actual alias
-show_alias_output('your_alias_here')
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("alias", type=str, help="alias to include in the show command")
+    args = parser.parse_args()
+    run_custom_show_command(args.alias)
